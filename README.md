@@ -131,5 +131,4 @@ Protocol details were derived from the community work in
 [nikshriv/hass_navien_water_heater](https://github.com/nikshriv/hass_navien_water_heater),
 and [rudybrian/PyNavienSmartControl](https://github.com/rudybrian/PyNavienSmartControl).
 
-Copyright (c) 2026 jlslate. All rights reserved. No license is granted for reuse
-or redistribution.
+Released into the public domain under [the Unlicense](https://unlicense.org).

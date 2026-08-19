@@ -1,3 +1,14 @@
+/*
+ * This is free and unencumbered software released into the public domain.
+ *
+ * Anyone is free to copy, modify, publish, use, compile, sell, or
+ * distribute this software, either in source code form or as a compiled
+ * binary, for any purpose, commercial or non-commercial, and by any
+ * means.
+ *
+ * For more information, please refer to <https://unlicense.org>
+ */
+
 /**
  *  Navien NaviLink Gateway
  *
@@ -12,8 +23,6 @@
  *  If the hub's MQTT client refuses the wss:// URL, the driver falls back to the AWS IoT
  *  HTTPS publish endpoint for control commands (SigV4 signed, port 8443). Control works
  *  in that mode, but status cannot be received, because HTTPS publish has no subscribe.
- *
- *  Copyright (c) 2026 jlslate. All rights reserved.
  */
 
 import groovy.json.JsonOutput

@@ -1,3 +1,14 @@
+/*
+ * This is free and unencumbered software released into the public domain.
+ *
+ * Anyone is free to copy, modify, publish, use, compile, sell, or
+ * distribute this software, either in source code form or as a compiled
+ * binary, for any purpose, commercial or non-commercial, and by any
+ * means.
+ *
+ * For more information, please refer to <https://unlicense.org>
+ */
+
 /**
  *  Navien NaviLink Water Heater
  *
@@ -8,8 +19,6 @@
  *  Wire values from Navien are scaled, and the scaling depends on how the unit was
  *  commissioned (Celsius or Fahrenheit) and on the unit family. All of that is decoded
  *  here, then converted to the hub's temperature scale.
- *
- *  Copyright (c) 2026 jlslate. All rights reserved.
  */
 
 import groovy.transform.Field

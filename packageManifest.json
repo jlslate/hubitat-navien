@@ -32,5 +32,6 @@
             "location": "https://raw.githubusercontent.com/jlslate/hubitat-navien/main/drivers/navien-navilink-water-heater.groovy",
             "required": true
         }
-    ]
+    ],
+    "licenseFile": "https://raw.githubusercontent.com/jlslate/hubitat-navien/main/LICENSE"
 }
