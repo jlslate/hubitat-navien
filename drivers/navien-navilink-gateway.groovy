@@ -92,6 +92,8 @@ def credentialsRefreshed() {
 // ===================================================================================
 
 def connect() {
+    if (!parentAppPresent()) return
+
     Map creds
     try {
         creds = parent.getAwsCredentials()
@@ -185,6 +187,27 @@ def onConnected() {
     }
 }
 
+/**
+ * This device only works when the NaviLink app creates it: the app supplies the AWS
+ * credentials, and it stamps on the MAC address, homeSeq and deviceType that every
+ * MQTT topic is built from. A device added by hand from "Add device" has none of that.
+ */
+private Boolean parentAppPresent() {
+    if (parent != null && macAddress()) return true
+
+    unschedule()
+    sendEvent(name: "connection", value: "disconnected")
+    if (parent == null) {
+        log.error "${device.displayName} was not created by the Navien NaviLink app, so it has no way to " +
+                  "sign in. Delete this device, then open Apps > Navien NaviLink (Cloud) and use " +
+                  "\"Discover NaviLink devices\" - the app creates the gateway and its water heater children for you."
+    } else {
+        log.error "${device.displayName} is missing its NaviLink device data (MAC address). Re-run " +
+                  "\"Discover NaviLink devices\" in the Navien NaviLink (Cloud) app to repopulate it."
+    }
+    return false
+}
+
 private void subscribeTopics() {
     [
         topicChannelInfoSub(),
@@ -211,6 +234,7 @@ private void disconnectMqtt() {
 }
 
 def healthCheck() {
+    if (!parentAppPresent()) return
     if (device.currentValue("connection") == "http-fallback") return
     if (!interfaces.mqtt.isConnected()) {
         log.warn "MQTT connection to the Navien cloud is down; reconnecting"

@@ -65,23 +65,38 @@ def updated() {
 // Commands
 // ===================================================================================
 
+/**
+ * Every command is relayed through the gateway device. A channel device added by hand
+ * has no gateway to relay through.
+ */
+private Boolean gatewayPresent() {
+    if (parent != null) return true
+    log.error "${device.displayName} was not created by the Navien NaviLink gateway, so it has nothing to " +
+              "send commands through. Delete it and let the gateway device create its channels."
+    return false
+}
+
 def on() {
     if (txtEnable != false) log.info "${device.displayName}: power on"
+    if (!gatewayPresent()) return
     parent.setPower(channelNumber(), true)
 }
 
 def off() {
     if (txtEnable != false) log.info "${device.displayName}: power off"
+    if (!gatewayPresent()) return
     parent.setPower(channelNumber(), false)
 }
 
 def onDemandOn() {
     if (txtEnable != false) log.info "${device.displayName}: on-demand recirculation on"
+    if (!gatewayPresent()) return
     parent.setOnDemand(channelNumber(), true)
 }
 
 def onDemandOff() {
     if (txtEnable != false) log.info "${device.displayName}: on-demand recirculation off"
+    if (!gatewayPresent()) return
     parent.setOnDemand(channelNumber(), false)
 }
 
@@ -112,10 +127,12 @@ def setDHWTemperature(temperature) {
                   : deviceScaleTemp.setScale(0, BigDecimal.ROUND_HALF_UP).intValue()
 
     if (txtEnable != false) log.info "${device.displayName}: setpoint ${target}°${location.temperatureScale}"
+    if (!gatewayPresent()) return
     parent.setTemperature(channelNumber(), raw)
 }
 
 def refresh() {
+    if (!gatewayPresent()) return
     parent.refreshChannel(channelNumber())
 }
 
