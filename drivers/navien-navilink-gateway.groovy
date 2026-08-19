@@ -116,8 +116,16 @@ def connect() {
     state.userSeq = creds.userSeq?.toString()
 
     sendEvent(name: "connection", value: "connecting")
-    String url = presignIotWebsocketUrl(creds)
-    logDebug "Connecting to ${creds.endpoint} as ${state.clientId}"
+
+    // Paho writes "Host: <endpoint>:443" on the WebSocket upgrade for any port but 80,
+    // and AWS recomputes the signature over the header it actually received - so the
+    // canonical host has to carry the port too. Builds that set skipPortDuringHandshake
+    // send a bare host instead, so alternate on failure rather than assuming.
+    Boolean signWithPort = (state.signHostWithPort == null) ? true : (state.signHostWithPort as Boolean)
+    state.signHostWithPort = signWithPort
+    String url = presignIotWebsocketUrl(creds, signWithPort)
+    logDebug "Connecting to ${creds.endpoint} as ${state.clientId} (signing host as " +
+             "${signWithPort ? creds.endpoint + ':443' : creds.endpoint})"
 
     try {
         // Named arguments here on purpose: Hubitat's connect() takes the options map
@@ -133,7 +141,7 @@ def connect() {
             cleanSession   : true
         )
     } catch (Exception e) {
-        log.error "MQTT connect to the Navien cloud failed: ${e.message}"
+        log.error "MQTT connect to the Navien cloud failed: ${describeException(e)}"
         connectFailed()
         return
     }
@@ -149,7 +157,10 @@ def connect() {
 private void connectFailed() {
     Integer failures = ((state.connectFailures ?: 0) as Integer) + 1
     state.connectFailures = failures
-    if (failures >= 3) {
+    // Alternate how the canonical host is signed, so a hub whose client omits the port
+    // on the upgrade finds its way to the matching signature on the next attempt.
+    state.signHostWithPort = !(state.signHostWithPort as Boolean)
+    if (failures >= 4) {
         if (device.currentValue("connection") != "http-fallback") {
             log.warn "Could not establish MQTT after ${failures} attempts. Commands will be sent over the " +
                      "AWS IoT HTTPS endpoint instead; live status is not available in that mode."
@@ -547,9 +558,10 @@ private Map lastWillMessage() {
 // AWS Signature Version 4
 // ===================================================================================
 
-private String presignIotWebsocketUrl(Map creds) {
+private String presignIotWebsocketUrl(Map creds, Boolean signHostWithPort = true) {
     String service = "iotdevicegateway"
     String host = creds.endpoint
+    String canonicalHost = signHostWithPort ? "${host}:443" : host
     String region = creds.region
     Date nowDate = new Date()
     String amzDate = utcFormat("yyyyMMdd'T'HHmmss'Z'", nowDate)
@@ -570,7 +582,7 @@ private String presignIotWebsocketUrl(Map creds) {
         "GET",
         "/mqtt",
         canonicalQuery,
-        "host:${host}",
+        "host:${canonicalHost}",
         "",
         "host",
         sha256Hex("")
@@ -674,6 +686,24 @@ private BigDecimal decodeTemp(value, Integer temperatureType) {
     BigDecimal v = value as BigDecimal
     // Celsius devices report the setpoint in half-degree units; Fahrenheit ones are whole degrees.
     return (temperatureType == 1) ? (v / 2.0).setScale(1, BigDecimal.ROUND_HALF_UP) : v
+}
+
+/**
+ * Paho's MqttException usually has a null message; what identifies the failure is its
+ * reason code and wrapped cause.
+ */
+private String describeException(Exception e) {
+    StringBuilder sb = new StringBuilder(e.getClass().getSimpleName())
+    if (e.message) sb.append(": ").append(e.message)
+    try {
+        def rc = e.getReasonCode()
+        if (rc != null) sb.append(" [reasonCode ").append(rc).append("]")
+    } catch (Exception ignored) { }
+    try {
+        def cause = e.getCause()
+        if (cause != null) sb.append(" caused by ").append(cause.toString())
+    } catch (Exception ignored) { }
+    return sb.toString()
 }
 
 private void logDebug(String msg) {
