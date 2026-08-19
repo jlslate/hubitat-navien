@@ -170,9 +170,11 @@ def initialize() {
 
 private Map signIn() {
     Map body = [userId: navienUser, password: navienPassword]
+    // The full URL goes in uri: Hubitat replaces the URI's path with the `path`
+    // parameter rather than appending to it, which would drop the /api/v2 prefix
+    // and earn a 403 "Missing Authentication Token" from Navien's API gateway.
     Map params = [
-        uri: NAVIEN_API,
-        path: "/user/sign-in",
+        uri: "${NAVIEN_API}/user/sign-in",
         contentType: "application/json",
         requestContentType: "application/json",
         body: body,
@@ -183,7 +185,8 @@ private Map signIn() {
     httpPost(params) { resp ->
         if (resp.status != 200) throw new Exception("HTTP ${resp.status} from sign-in")
         def data = resp.data instanceof String ? parseJson(resp.data) : resp.data
-        if (!data?.data) throw new Exception("Unexpected sign-in response: ${data}")
+        // Navien answers a rejected sign-in with HTTP 200 and an error in the body.
+        if (!data?.data) throw new Exception(describeApiError(data, "sign-in"))
         userInfo = data.data as Map
     }
 
@@ -203,8 +206,7 @@ private Map signIn() {
 
 private List fetchDeviceList() {
     Map params = [
-        uri: NAVIEN_API,
-        path: "/device/list",
+        uri: "${NAVIEN_API}/device/list",
         headers: ["Authorization": state.accessToken],
         contentType: "application/json",
         requestContentType: "application/json",
@@ -217,6 +219,7 @@ private List fetchDeviceList() {
         if (resp.status != 200) throw new Exception("HTTP ${resp.status} from device list")
         def data = resp.data instanceof String ? parseJson(resp.data) : resp.data
         def payload = data?.data
+        if (payload == null) throw new Exception(describeApiError(data, "device list"))
         if (payload instanceof List) {
             devices = payload
         } else if (payload instanceof Map) {
@@ -227,6 +230,23 @@ private List fetchDeviceList() {
     state.deviceCount = devices.size()
     logDebug "NaviLink returned ${devices.size()} device(s)"
     return devices
+}
+
+/**
+ * Navien returns HTTP 200 with {"code": ..., "msg": ...} for failures such as a bad
+ * password, so the body is where the real error lives.
+ */
+private String describeApiError(data, String what) {
+    String msg = data?.msg
+    def code = data?.code
+    if (msg) {
+        String hint = ""
+        if (msg.toString().contains("USER_NOT_FOUND")) hint = " - check the email address"
+        else if (msg.toString().toUpperCase().contains("PASSWORD")) hint = " - check the password"
+        String codePart = code ? ' (code ' + code + ')' : ''
+        return "NaviLink rejected the ${what}: ${msg}${codePart}${hint}"
+    }
+    return "Unexpected ${what} response from NaviLink: ${data}"
 }
 
 // ===================================================================================
