@@ -75,24 +75,27 @@ on the interval set in the app (default 5 minutes). The unit also pushes status 
 when something changes. Credentials are re-issued every 30 minutes, and the connection
 is rebuilt with the fresh set.
 
-### The one thing to watch
+### If the connection drops to HTTPS-only
 
-Hubitat's documented MQTT transports are `tcp://` and `ssl://`. A `wss://` broker URL —
-what AWS IoT WebSocket auth requires — is *not* documented as supported, though the
-underlying client library handles it. If your hub's firmware rejects it, the gateway
-device's `connection` attribute goes to **`http-fallback`** after three attempts and you
-will see this in the log:
+Hubitat's documented MQTT transports are `tcp://` and `ssl://`, but a `wss://` broker URL
+works — this integration runs over one. Two details make it work, and both are easy to
+get wrong if you adapt this code:
 
-> Could not establish MQTT after 3 attempts. Commands will be sent over the AWS IoT
-> HTTPS endpoint instead; live status is not available in that mode.
+- AWS IoT authenticates a WebSocket connection with a SigV4 pre-signed URL, built in
+  `presignIotWebsocketUrl()`.
+- The canonical request must sign the host **including the port** (`<endpoint>:443`),
+  because the underlying client writes `Host: <endpoint>:443` on the upgrade and AWS
+  recomputes the signature over the header it received. Signing a bare host earns a
+  silent 403 on the upgrade, which surfaces as a detail-free `MqttException`.
 
-In that mode the driver signs and posts commands to the AWS IoT HTTPS publish endpoint
-(port 8443), so **on/off, setpoint and recirculation still work** — but nothing can be
-received, because an HTTPS publish has no subscribe half. It keeps retrying MQTT in the
-background every 15 minutes.
+If MQTT cannot be established after four attempts, the gateway's `connection` attribute
+goes to **`http-fallback`** and commands route to the AWS IoT HTTPS publish endpoint
+(port 8443) instead. On/off, setpoint and recirculation still work in that mode, but no
+status can be received, because an HTTPS publish has no subscribe half. It keeps
+retrying MQTT every 15 minutes, alternating how it signs the host in case a different
+platform build sends a bare one.
 
-So: check the gateway device's `connection` attribute after install. `connected` means
-you have everything. `http-fallback` means control only.
+So: check the gateway device's `connection` attribute. `connected` is the normal state.
 
 ## Notes and limits
 
@@ -101,7 +104,9 @@ you have everything. `http-fallback` means control only.
 - The protocol is not published by Navien. Field encodings here follow the
   community-reverse-engineered NaviLink protocol, cross-checked against the Home
   Assistant integrations linked below.
-- Tested against the v2 API shape used by NaviLink and NaviLink Lite gateways. Heat-pump
+- Verified end to end on a Hubitat hub against a real NaviLink account: sign-in, device
+  discovery, MQTT over WebSockets, and live channel status.
+- Built for the v2 API shape used by NaviLink and NaviLink Lite gateways. Heat-pump
   units (NWP500) use a newer message set and are not covered.
 - Multi-channel and cascaded (multi-unit) systems are handled: one Hubitat device per
   channel, per-unit temperatures averaged, flow and gas summed.
