@@ -693,8 +693,9 @@ private BigDecimal decodeTemp(value, Integer temperatureType) {
  * reason code and wrapped cause.
  */
 private String describeException(Exception e) {
-    StringBuilder sb = new StringBuilder(e.getClass().getSimpleName())
-    if (e.message) sb.append(": ").append(e.message)
+    // Not getClass(): Hubitat's sandbox rejects it at compile time. toString() already
+    // carries the class name.
+    StringBuilder sb = new StringBuilder(e.toString())
     try {
         def rc = e.getReasonCode()
         if (rc != null) sb.append(" [reasonCode ").append(rc).append("]")
