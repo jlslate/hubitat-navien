@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat
 @Field static final Integer CMD_ON_DEMAND      = 33554437
 
 metadata {
-    definition(name: "Navien NaviLink Gateway", namespace: "navien", author: "jlslate") {
+    definition(name: "Navien NaviLink Gateway", namespace: "jlslate", author: "jlslate") {
         capability "Initialize"
         capability "Refresh"
         capability "Actuator"
@@ -471,7 +471,7 @@ private createChannelDevice(Integer number) {
     try {
         String base = getDataValue("deviceName") ?: device.displayName
         String label = (state.channelNumbers?.size() ?: 1) > 1 ? "${base} Channel ${number}" : base as String
-        child = addChildDevice("navien", "Navien NaviLink Water Heater", dni,
+        child = addChildDevice("jlslate", "Navien NaviLink Water Heater", dni,
                                [name: "Navien NaviLink Water Heater", label: label, isComponent: false])
         log.info "Created channel device ${label} (${dni})"
     } catch (Exception e) {

@@ -18,7 +18,7 @@ import groovy.transform.Field
 @Field static final List<Integer> HIGH_GAS_SCALE_UNITS = [6, 8, 13, 14]   // NFB, NFC, NCB-H, NVW
 
 metadata {
-    definition(name: "Navien NaviLink Water Heater", namespace: "navien", author: "jlslate") {
+    definition(name: "Navien NaviLink Water Heater", namespace: "jlslate", author: "jlslate") {
         capability "Switch"
         capability "TemperatureMeasurement"
         capability "ThermostatHeatingSetpoint"

@@ -19,7 +19,7 @@ import groovy.transform.Field
 
 definition(
     name: "Navien NaviLink (Cloud)",
-    namespace: "navien",
+    namespace: "jlslate",
     author: "jlslate",
     description: "Cloud connection for Navien tankless water heaters and combi boilers via NaviLink.",
     category: "Green Living",
@@ -244,7 +244,7 @@ private createGatewayDevice(Map info) {
     if (!child) {
         String label = info.deviceName ?: "Navien NaviLink"
         try {
-            child = addChildDevice("navien", "Navien NaviLink Gateway", dni, [name: "Navien NaviLink Gateway", label: label])
+            child = addChildDevice("jlslate", "Navien NaviLink Gateway", dni, [name: "Navien NaviLink Gateway", label: label])
             log.info "Created NaviLink gateway device ${label} (${dni})"
         } catch (Exception e) {
             // Happens when discovery runs before this app instance has been saved.
