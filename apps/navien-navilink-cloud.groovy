@@ -107,17 +107,36 @@ def discoveryPage() {
         }
 
         List<String> added = []
+        List<String> failed = []
         state.discoveredDevices = devices.collect { Map entry -> (entry.deviceInfo ?: entry) as Map }
         state.discoveredDevices.each { Map info ->
+            state.remove("lastCreateError")
             def dev = createGatewayDevice(info)
-            added << (dev ? "${dev.displayName} (${info.macAddress})"
-                          : "${info.deviceName ?: info.macAddress} - will be created when you press Done")
+            if (dev) {
+                added << "${dev.displayName} (${info.macAddress})"
+            } else {
+                failed << "${info.deviceName ?: info.macAddress}: ${state.lastCreateError ?: 'unknown reason'}"
+            }
         }
 
         section {
-            paragraph "<b>Found ${devices.size()} NaviLink device(s):</b><br>" + added.collect { "&bull; ${it}" }.join("<br>")
-            paragraph "Each gateway opens its own MQTT connection to the Navien cloud and creates one child device " +
-                      "per heating channel it reports. Give it up to a minute after install."
+            paragraph "<b>Found ${devices.size()} NaviLink device(s) on the account.</b>"
+            if (added) {
+                paragraph "<b>Ready:</b><br>" + added.collect { "&bull; ${it}" }.join("<br>")
+            }
+            if (failed) {
+                // Nearly always a driver that has not been installed, or one whose
+                // namespace does not match this app's.
+                paragraph "<b>Could not create a device for:</b><br>" + failed.collect { "&bull; ${it}" }.join("<br>")
+                paragraph "Check that <b>Navien NaviLink Gateway</b> and <b>Navien NaviLink Water Heater</b> are " +
+                          "installed under <i>Drivers code</i>, and that their namespace matches this app's " +
+                          "(<b>${app.getNamespace() ?: 'jlslate'}</b>). Paste the current driver code over the " +
+                          "existing entries, then run discovery again."
+            }
+            if (added && !failed) {
+                paragraph "Each gateway opens its own MQTT connection to the Navien cloud and creates one child " +
+                          "device per heating channel it reports. Give it up to a minute."
+            }
             href name: "backToMain", page: "mainPage", title: "Done", description: "Return to the main page"
         }
     }
@@ -267,9 +286,11 @@ private createGatewayDevice(Map info) {
             child = addChildDevice("jlslate", "Navien NaviLink Gateway", dni, [name: "Navien NaviLink Gateway", label: label])
             log.info "Created NaviLink gateway device ${label} (${dni})"
         } catch (Exception e) {
-            // Happens when discovery runs before this app instance has been saved.
-            // initialize() retries from state.discoveredDevices once the app is installed.
-            log.warn "Could not create the device for ${mac} yet (${e.message}); it will be created on install"
+            // Either the driver is missing / namespaced differently, or discovery ran
+            // before this app instance was saved. initialize() retries from
+            // state.discoveredDevices once the app is installed.
+            state.lastCreateError = e.message
+            log.warn "Could not create the device for ${mac}: ${e.message}"
             return null
         }
     }
