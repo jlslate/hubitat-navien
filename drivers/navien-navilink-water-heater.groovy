@@ -9,7 +9,7 @@
  *  commissioned (Celsius or Fahrenheit) and on the unit family. All of that is decoded
  *  here, then converted to the hub's temperature scale.
  *
- *  Licensed under the Apache License, Version 2.0
+ *  Copyright (c) 2026 jlslate. All rights reserved.
  */
 
 import groovy.transform.Field

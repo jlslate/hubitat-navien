@@ -15,6 +15,19 @@ mobile app uses.
 
 ## Install
 
+### With Hubitat Package Manager
+
+Use HPM's *Install → From a URL* and paste:
+
+```
+https://raw.githubusercontent.com/jlslate/hubitat-navien/main/packageManifest.json
+```
+
+HPM installs the app and both drivers, and will offer updates as they are published.
+Then skip to step 3 below.
+
+### By hand
+
 1. **Drivers first.** In Hubitat, go to *Developer tools → Drivers code → New driver*,
    paste `navien-navilink-gateway.groovy`, Save. Repeat for
    `navien-navilink-water-heater.groovy`.
@@ -118,4 +131,5 @@ Protocol details were derived from the community work in
 [nikshriv/hass_navien_water_heater](https://github.com/nikshriv/hass_navien_water_heater),
 and [rudybrian/PyNavienSmartControl](https://github.com/rudybrian/PyNavienSmartControl).
 
-Licensed under the Apache License, Version 2.0.
+Copyright (c) 2026 jlslate. All rights reserved. No license is granted for reuse
+or redistribution.

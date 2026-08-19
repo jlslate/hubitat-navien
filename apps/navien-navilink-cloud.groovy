@@ -14,7 +14,7 @@ import groovy.transform.Field
  *  This app owns piece 1. The gateway driver owns piece 2, because Hubitat only
  *  allows an MQTT client inside a driver.
  *
- *  Licensed under the Apache License, Version 2.0
+ *  Copyright (c) 2026 jlslate. All rights reserved.
  */
 
 definition(

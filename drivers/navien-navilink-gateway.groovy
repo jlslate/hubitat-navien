@@ -13,7 +13,7 @@
  *  HTTPS publish endpoint for control commands (SigV4 signed, port 8443). Control works
  *  in that mode, but status cannot be received, because HTTPS publish has no subscribe.
  *
- *  Licensed under the Apache License, Version 2.0
+ *  Copyright (c) 2026 jlslate. All rights reserved.
  */
 
 import groovy.json.JsonOutput

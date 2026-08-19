@@ -1,0 +1,36 @@
+{
+    "packageName": "Navien NaviLink (Cloud)",
+    "author": "jlslate",
+    "version": "1.0.0",
+    "minimumHEVersion": "2.2.2",
+    "dateReleased": "2026-08-19",
+    "releaseNotes": "Initial release. Cloud connection to Navien tankless water heaters and combi boilers through NaviLink: power, hot water setpoint, on-demand recirculation, outlet and inlet temperature, flow rate and gas usage.",
+    "documentationLink": "https://github.com/jlslate/hubitat-navien/blob/main/README.md",
+    "apps": [
+        {
+            "id": "ae1f11d3-361b-449c-9c67-9e8535c4bf3e",
+            "name": "Navien NaviLink (Cloud)",
+            "namespace": "jlslate",
+            "location": "https://raw.githubusercontent.com/jlslate/hubitat-navien/main/apps/navien-navilink-cloud.groovy",
+            "required": true,
+            "oauth": false,
+            "primary": true
+        }
+    ],
+    "drivers": [
+        {
+            "id": "5b7b8e1f-9a34-4dd6-9654-1281d06e7923",
+            "name": "Navien NaviLink Gateway",
+            "namespace": "jlslate",
+            "location": "https://raw.githubusercontent.com/jlslate/hubitat-navien/main/drivers/navien-navilink-gateway.groovy",
+            "required": true
+        },
+        {
+            "id": "4583f7a2-772c-410e-b531-75cf123162a6",
+            "name": "Navien NaviLink Water Heater",
+            "namespace": "jlslate",
+            "location": "https://raw.githubusercontent.com/jlslate/hubitat-navien/main/drivers/navien-navilink-water-heater.groovy",
+            "required": true
+        }
+    ]
+}
